@@ -3,7 +3,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
@@ -19,56 +19,31 @@ def home():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_message = request.json.get('message')  # Get the text message
-    image_url = request.json.get('image_url')  # Get the image URL (optional)
+    user_message = request.json.get('message')  # Get user message
 
-    print(f"User Message: {user_message}")  # Debugging: Print the user's message
-    if image_url:
-        print(f"Image URL: {image_url}")  # Debugging: Print the image URL
+    if not user_message:
+        return jsonify({'reply': "Please enter a message."})
 
     try:
-        # Prepare the messages for the API
+        # Corrected message structure
         messages = [
-            {
-                "role": "user",
-                "content": []
-            }
+            {"role": "system", "content": "You are a helpful AI financial assistant. Provide investing guidance in simple terms."},
+            {"role": "user", "content": user_message}
         ]
 
-        # Add text message if provided
-        if user_message:
-            messages[0]["content"].append({
-                "type": "text",
-                "text": user_message
-            })
-
-        # Add image URL if provided
-        if image_url:
-            messages[0]["content"].append({
-                "type": "image_url",
-                "image_url": {
-                    "url": image_url
-                }
-            })
-
-        # Call the OpenAI API with Google Gemini model
+        # Call the OpenAI API with the correct payload
         completion = client.chat.completions.create(
-            extra_headers={
-                "HTTP-Referer": "<YOUR_SITE_URL>",  # Optional. Site URL for rankings on openrouter.ai.
-                "X-Title": "<YOUR_SITE_NAME>",  # Optional. Site title for rankings on openrouter.ai.
-            },
-            extra_body={},
-            model="google/gemini-exp-1206:free",  # Use Google Gemini model
+            model="google/gemini-exp-1206:free",
             messages=messages
         )
 
-        # Extract the chatbot's reply
-        reply = completion.choices[0].message.content
-        print(f"Chatbot Reply: {reply}")  # Debugging: Print the chatbot's reply
+        # Extract and return the chatbot's response
+        reply = completion.choices[0].message['content']
         return jsonify({'reply': reply})
+    
     except Exception as e:
-        print(f"Error: {e}")  # Debugging: Print any exceptions
+        print(f"Error: {e}")  # Debugging: Print the error
         return jsonify({'reply': 'Sorry, something went wrong. Please try again.'})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
