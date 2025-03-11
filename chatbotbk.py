@@ -10,7 +10,9 @@ app = Flask(__name__)
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),  # Load API key from environment
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    print("API Key:", os.getenv("OPENROUTER_API_KEY"))
+# Load API key from environment
 )
 
 @app.route('/')
